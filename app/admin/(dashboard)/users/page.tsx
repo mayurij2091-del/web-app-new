@@ -138,8 +138,8 @@ export default function UsersPage() {
     setCreateUserLoading(true);
     setCreateUserMsg(null);
     try {
-      const hashedPassword = await hashPassword(newPassword);
-      const { error } = await supabase.from("users").insert([{ phone: newPhone, password: hashedPassword }]);
+      
+      const { error } = await supabase.from("users").insert([{ phone: newPhone, password: newPassword }]);
       if (error) {
         if (error.code === "23505") {
           setCreateUserMsg({ type: "error", text: "Phone number already exists." });
@@ -180,8 +180,8 @@ export default function UsersPage() {
     setResetLoading(true);
     setResetMsg(null);
     try {
-      const hashedPassword = await hashPassword(resetPassword);
-      const { error } = await supabase.from("users").update({ password: hashedPassword }).eq("phone", resetPhone!);
+      
+      const { error } = await supabase.from("users").update({ password: resetPassword }).eq("phone", resetPhone!);
       if (error) throw error;
       setResetMsg({ type: "success", text: "Password updated." });
       setResetPassword("");
