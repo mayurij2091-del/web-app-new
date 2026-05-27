@@ -7,14 +7,14 @@ type User = { id: string; phone: string; created_at: string };
 type UserMainCourse = { 
   id: string; 
   main_course_id: string; 
-  main_courses: { name: string; image_url: string }[]  // <-- array, not single object
+  main_courses: { name: string; image_url: string } | null
 };
 
 type UserSubcourse = { 
   id: string; 
   course_id: string; 
   progress: number; 
-  courses: { title: string; emoji: string; tag: string; total_lessons: number }[]  // <-- array
+  courses: { title: string; emoji: string; tag: string; total_lessons: number } | null
 };
 
 // NOTE: Extract these into app/admin/components/AdminUI.tsx
@@ -63,8 +63,8 @@ export default function UsersPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-  const [userMainCourses, setUserMainCourses] = useState<Record<string, UserMainCourse[]>>({});
-  const [userSubcourses, setUserSubcourses] = useState<Record<string, UserSubcourse[]>>({});
+const [userMainCourses, setUserMainCourses] = useState<Record<string, UserMainCourse[]>>({});
+const [userSubcourses, setUserSubcourses] = useState<Record<string, UserSubcourse[]>>({});
   const [loadingUserDetail, setLoadingUserDetail] = useState<string | null>(null);
 
   // 9. Error handling on fetch
@@ -92,8 +92,8 @@ export default function UsersPage() {
       ]);
       if (mcErr) throw mcErr;
       if (scErr) throw scErr;
-      setUserMainCourses((prev) => ({ ...prev, [userId]: (mc as UserMainCourse[]) ?? [] }));
-      setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as UserSubcourse[]) ?? [] }));
+setUserMainCourses((prev) => ({ ...prev, [userId]: (mc as unknown as UserMainCourse[]) ?? [] }));
+setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcourse[]) ?? [] }));
     } catch (err: any) {
       // Silently handle — could add a detail-level error state if needed
       console.error("Failed to load user detail:", err);
@@ -320,13 +320,13 @@ export default function UsersPage() {
                                           <div key={mc.id} className="flex items-center justify-between px-4 py-3 rounded-lg transition-all hover:bg-[rgba(255,255,255,0.03)]"
                                             style={{ background: DS.bg.base, border: `1px solid ${DS.border.default}` }}>
                                             <div className="flex items-center gap-3">
-                                              {mc.main_courses?.[0]?.image_url
-                                                ? <img src={mc.main_courses?.[0]?.image_url} alt="" className="w-9 h-9 rounded-lg object-cover" />
+                                              {mc.main_courses?.image_url
+                                                ? <img src={mc.main_courses.image_url} alt="" className="w-9 h-9 rounded-lg object-cover" />
                                                 : <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: DS.accentSoft }}>
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={DS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                                                   </div>
                                               }
-                                              <p className="text-sm font-medium">{mc.main_courses?.[0]?.name}</p>
+                                              <p className="text-sm font-medium">{mc.main_courses?.name}</p>
                                             </div>
                                             <button onClick={() => handleUnassignMainCourse(mc.id, user.id)}
                                               className="text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
@@ -354,17 +354,17 @@ export default function UsersPage() {
                                           <div key={sc.id} className="flex items-center justify-between px-4 py-3 rounded-lg transition-all hover:bg-[rgba(255,255,255,0.03)]"
                                             style={{ background: DS.bg.base, border: `1px solid ${DS.border.default}` }}>
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                                              <span className="text-xl shrink-0">{sc.courses?.[0]?.emoji}</span>
+                                              <span className="text-xl shrink-0">{sc.courses?.emoji}</span>
                                               <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                  <p className="text-sm font-medium">{sc.courses?.[0]?.title}</p>
-                                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={tagStyle(sc.courses?.[0]?.tag)}>{sc.courses?.[0]?.tag}</span>
+                                                  <p className="text-sm font-medium">{sc.courses?.title}</p>
+                                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={tagStyle(sc.courses?.tag ?? "")}>{sc.courses?.tag}</span>
                                                 </div>
                                                 <div className="flex items-center gap-3 mt-2">
                                                   <div className="flex-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)", height: "5px", maxWidth: "140px" }}>
                                                     <div className="h-full rounded-full transition-all duration-500" style={{ width: `${sc.progress || 0}%`, background: DS.accent }} />
                                                   </div>
-                                                  <span className="text-[11px] tabular-nums" style={{ color: DS.text.muted }}>{sc.progress || 0}% · {sc.courses?.[0]?.total_lessons} lessons</span>
+                                                  <span className="text-[11px] tabular-nums" style={{ color: DS.text.muted }}>{sc.progress || 0}% · {sc.courses?.total_lessons} lessons</span>
                                                 </div>
                                               </div>
                                             </div>
@@ -421,14 +421,3 @@ export default function UsersPage() {
   );
 }
 
-// 2. Placeholder — implement proper hashing in lib/auth.ts
-// Use bcryptjs or crypto.subtle in a server action / API route
-async function hashPassword(password: string): Promise<string> {
-  // TODO: Replace with real hashing. For now, this is a placeholder that
-  // prevents plaintext storage. NEVER use this in production.
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + "your-pepper-secret");
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-}

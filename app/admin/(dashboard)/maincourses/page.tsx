@@ -58,6 +58,13 @@ export default function MainCoursesPage() {
   const [bulkLinkMsg, setBulkLinkMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [subcourseSearch, setSubcourseSearch] = useState("");
 
+  // NEW: Emoji-based bulk link
+  const [emojiSearchMainCourseId, setEmojiSearchMainCourseId] = useState("");
+  const [emojiQuery, setEmojiQuery] = useState("");
+  const [emojiSelectedIds, setEmojiSelectedIds] = useState<string[]>([]);
+  const [emojiLinkLoading, setEmojiLinkLoading] = useState(false);
+  const [emojiLinkMsg, setEmojiLinkMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   useEffect(() => {
     return () => {
       if (mcImagePreview) URL.revokeObjectURL(mcImagePreview);
@@ -244,7 +251,54 @@ export default function MainCoursesPage() {
     }
   };
 
+  // NEW: Emoji-based bulk link helpers
+  const toggleEmojiSubcourse = (id: string) => {
+    setEmojiSelectedIds(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
+
+  const handleEmojiBulkLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (emojiSelectedIds.length === 0) { setEmojiLinkMsg({ type: "error", text: "Select at least one subcourse." }); return; }
+    if (!emojiSearchMainCourseId) { setEmojiLinkMsg({ type: "error", text: "Select a main course." }); return; }
+    setEmojiLinkLoading(true);
+    setEmojiLinkMsg(null);
+    try {
+      const { data: existing, error: checkErr } = await supabase
+        .from("main_course_subcourses")
+        .select("course_id")
+        .eq("main_course_id", emojiSearchMainCourseId)
+        .in("course_id", emojiSelectedIds);
+      if (checkErr) throw checkErr;
+
+      const existingSet = new Set(existing?.map(r => r.course_id) || []);
+      const toLink = emojiSelectedIds
+        .filter(cid => !existingSet.has(cid))
+        .map(cid => ({ main_course_id: emojiSearchMainCourseId, course_id: cid }));
+
+      if (toLink.length === 0) {
+        setEmojiLinkMsg({ type: "error", text: "All selected subcourses are already linked to this main course." });
+        setEmojiLinkLoading(false);
+        return;
+      }
+
+      const { error: insertErr } = await supabase.from("main_course_subcourses").insert(toLink);
+      if (insertErr) throw insertErr;
+
+      const skipped = emojiSelectedIds.length - toLink.length;
+      setEmojiLinkMsg({
+        type: "success",
+        text: `Linked ${toLink.length} subcourse${toLink.length !== 1 ? "s" : ""}${skipped > 0 ? `, ${skipped} already linked` : ""}.`
+      });
+      setEmojiSelectedIds([]);
+    } catch (err: any) {
+      setEmojiLinkMsg({ type: "error", text: err?.message || "Bulk link failed." });
+    } finally {
+      setEmojiLinkLoading(false);
+    }
+  };
+
   const filteredSubcourses = courses.filter(c => `${c.emoji} ${c.title}`.toLowerCase().includes(subcourseSearch.toLowerCase()));
+  const emojiFilteredSubcourses = courses.filter(c => emojiQuery.trim() === "" ? true : c.emoji.includes(emojiQuery.trim()));
 
   return (
     <div className="flex flex-col gap-8">
@@ -433,6 +487,62 @@ export default function MainCoursesPage() {
           <button type="submit" disabled={bulkLinkLoading || !bulkLinkMainCourseId} className="w-full py-3 rounded-lg text-sm font-medium transition-all hover:brightness-110 active:scale-[0.98]"
             style={{ background: "#A855F7", color: "#fff", opacity: bulkLinkLoading || !bulkLinkMainCourseId ? 0.6 : 1 }}>
             {bulkLinkLoading ? "Linking..." : `Link ${selectedSubcourseIds.length} Subcourse${selectedSubcourseIds.length !== 1 ? "s" : ""}`}
+          </button>
+        </form>
+      </div>
+
+      {/* ═══ NEW: Bulk Link by Emoji ═══ */}
+      <div className="rounded-xl p-6" style={{ background: DS.bg.card, border: `1px solid ${DS.border.default}` }}>
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: "rgba(255,160,50,0.1)" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFA032" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <h2 className="text-sm font-semibold">Bulk Link by Emoji</h2>
+        </div>
+        <form onSubmit={handleEmojiBulkLink} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium" style={{ color: DS.text.muted }}>Select Main Course</label>
+            <select value={emojiSearchMainCourseId} onChange={(e) => setEmojiSearchMainCourseId(e.target.value)} required
+              className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all appearance-none" style={inputStyle} onFocus={focusAccent} onBlur={blurReset}>
+              <option value="">— Pick a main course —</option>
+              {mainCourses.map((mc) => <option key={mc.id} value={mc.id}>{mc.name}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium" style={{ color: DS.text.muted }}>Search by Emoji ({emojiSelectedIds.length} selected)</label>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setEmojiSelectedIds(emojiFilteredSubcourses.map(c => c.id))}
+                  className="text-[10px] px-2 py-1 rounded transition-all hover:opacity-80" style={{ color: DS.accent }}>Select all visible</button>
+                <button type="button" onClick={() => setEmojiSelectedIds([])}
+                  className="text-[10px] px-2 py-1 rounded transition-all hover:opacity-80" style={{ color: DS.text.muted }}>Clear</button>
+              </div>
+            </div>
+            <input type="text" placeholder="Paste or type an emoji... e.g. 🐍" value={emojiQuery} onChange={(e) => setEmojiQuery(e.target.value)}
+              className="w-full rounded-lg px-4 py-2 text-xs outline-none transition-all mb-2" style={{ ...inputStyle, background: DS.bg.base }} onFocus={focusAccent} onBlur={blurReset} />
+            <div className="max-h-48 overflow-y-auto rounded-lg" style={{ background: DS.bg.base, border: `1px solid ${DS.border.default}` }}>
+              {emojiFilteredSubcourses.length === 0 ? (
+                <p className="px-4 py-3 text-xs text-center" style={{ color: DS.text.dim }}>No subcourses match this emoji.</p>
+              ) : (
+                emojiFilteredSubcourses.map(c => (
+                  <label key={c.id} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.02)]"
+                    style={{ borderBottom: `1px solid ${DS.border.default}` }}>
+                    <input type="checkbox" checked={emojiSelectedIds.includes(c.id)} onChange={() => toggleEmojiSubcourse(c.id)}
+                      className="w-3.5 h-3.5 rounded accent-[#FF3B3B]" />
+                    <span className="text-xl shrink-0">{c.emoji}</span>
+                    <span className="text-xs" style={{ color: DS.text.primary }}>{c.title}</span>
+                    <span className="text-[10px] ml-auto px-1.5 py-0.5 rounded" style={{ color: DS.text.muted, background: "rgba(255,255,255,0.04)" }}>{c.tag}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+          {emojiLinkMsg && <Msg msg={emojiLinkMsg} />}
+          <button type="submit" disabled={emojiLinkLoading || !emojiSearchMainCourseId} className="w-full py-3 rounded-lg text-sm font-medium transition-all hover:brightness-110 active:scale-[0.98]"
+            style={{ background: "#FFA032", color: "#fff", opacity: emojiLinkLoading || !emojiSearchMainCourseId ? 0.6 : 1 }}>
+            {emojiLinkLoading ? "Linking..." : `Link ${emojiSelectedIds.length} Subcourse${emojiSelectedIds.length !== 1 ? "s" : ""}`}
           </button>
         </form>
       </div>

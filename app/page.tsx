@@ -226,7 +226,7 @@ export default function Home() {
 
   const isRevealed = (id: string) => !!revealed[id];
 
-  const navLinks = ["courses", "about", "contact"];
+  const navLinks = ["courses", "about"];
 
   return (
     <div className="min-h-screen font-sans relative" style={{ background: "#0A0B14", color: "#E8E6F1" }}>
@@ -570,52 +570,91 @@ export default function Home() {
         <div
           ref={addRevealRef}
           data-reveal-id="courses-header"
-          className={`flex justify-between items-baseline mb-12 transition-all duration-700 ${isRevealed("courses-header") ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          className={`flex flex-col sm:flex-row justify-between items-start sm:items-baseline mb-12 transition-all duration-700 ${isRevealed("courses-header") ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
         >
-          <div>
+          <div className="mb-4 sm:mb-0">
             <h2 className="text-3xl md:text-4xl font-medium" style={{ color: "#E8E6F1", fontFamily: "'Playfair Display', serif" }}>popular courses</h2>
             <p className="text-sm mt-2" style={{ color: "rgba(232,230,241,0.35)" }}>Hand-picked favorites from our community</p>
           </div>
-          <Link href="/main/login" className="group text-sm font-medium flex items-center gap-1 transition-all hover:gap-2" style={{ color: "#818CF8" }}>
+          <Link href="/main/login" className="group text-sm font-medium flex items-center gap-1 transition-all hover:gap-2 shrink-0" style={{ color: "#818CF8" }}>
             view all
             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
           {[
             {
-              emoji: "📚",
+              emoji: "🍳",
               tag: "beginner",
-              title: "Foundations of Learning",
-              lessons: 12,
+              title: "Cooking Masterclass",
+              lessons: 18,
               rating: "4.9",
-              duration: "4h 30m",
-              bg: "rgba(99,102,241,0.06)",
-              glow: "rgba(99,102,241,0.2)",
-              tagStyle: { background: "rgba(99,102,241,0.12)", color: "#818CF8", border: "0.5px solid rgba(99,102,241,0.2)" },
+              duration: "6h 20m",
+              bg: "rgba(245,158,11,0.08)",
+              glow: "rgba(245,158,11,0.25)",
+              tagStyle: { background: "rgba(245,158,11,0.12)", color: "#FBBF24", border: "0.5px solid rgba(245,158,11,0.25)" },
+              desc: "Learn essential cooking techniques, meal prep, and delicious recipes from scratch.",
             },
             {
-              emoji: "🌱",
+              emoji: "💄",
               tag: "intermediate",
-              title: "Building Habits That Stick",
-              lessons: 9,
+              title: "DIY Makeup Products",
+              lessons: 14,
               rating: "4.8",
-              duration: "3h 15m",
-              bg: "rgba(16,185,129,0.06)",
-              glow: "rgba(16,185,129,0.2)",
-              tagStyle: { background: "rgba(16,185,129,0.1)", color: "#34D399", border: "0.5px solid rgba(16,185,129,0.2)" },
+              duration: "5h 10m",
+              bg: "rgba(236,72,153,0.08)",
+              glow: "rgba(236,72,153,0.25)",
+              tagStyle: { background: "rgba(236,72,153,0.12)", color: "#F472B6", border: "0.5px solid rgba(236,72,153,0.25)" },
+              desc: "Create your own lip balms, foundations, and skincare products at home safely.",
             },
             {
-              emoji: "🎯",
-              tag: "advanced",
-              title: "Mastering Deep Focus",
-              lessons: 15,
+              emoji: "💇‍♀️",
+              tag: "all levels",
+              title: "Hair Growth Secrets",
+              lessons: 12,
               rating: "5.0",
-              duration: "5h 45m",
+              duration: "4h 45m",
               bg: "rgba(139,92,246,0.08)",
-              glow: "rgba(139,92,246,0.2)",
-              tagStyle: { background: "rgba(139,92,246,0.12)", color: "#A78BFA", border: "0.5px solid rgba(139,92,246,0.2)" },
+              glow: "rgba(139,92,246,0.25)",
+              tagStyle: { background: "rgba(139,92,246,0.12)", color: "#A78BFA", border: "0.5px solid rgba(139,92,246,0.25)" },
+              desc: "Science-backed routines, natural remedies, and expert tips for stronger, longer hair.",
+            },
+            {
+              emoji: "🧴",
+              tag: "beginner",
+              title: "Natural Skincare 101",
+              lessons: 10,
+              rating: "4.7",
+              duration: "3h 30m",
+              bg: "rgba(16,185,129,0.08)",
+              glow: "rgba(16,185,129,0.25)",
+              tagStyle: { background: "rgba(16,185,129,0.12)", color: "#34D399", border: "0.5px solid rgba(16,185,129,0.25)" },
+              desc: "Build a clean skincare routine with natural ingredients for glowing, healthy skin.",
+            },
+            {
+              emoji: "✨",
+              tag: "advanced",
+              title: "Professional Makeup Artistry",
+              lessons: 22,
+              rating: "4.9",
+              duration: "8h 15m",
+              bg: "rgba(99,102,241,0.08)",
+              glow: "rgba(99,102,241,0.25)",
+              tagStyle: { background: "rgba(99,102,241,0.12)", color: "#818CF8", border: "0.5px solid rgba(99,102,241,0.25)" },
+              desc: "Master advanced techniques for bridal, editorial, and special occasion makeup.",
+            },
+            {
+              emoji: "🍰",
+              tag: "intermediate",
+              title: "Baking & Desserts",
+              lessons: 16,
+              rating: "4.8",
+              duration: "5h 50m",
+              bg: "rgba(249,115,22,0.08)",
+              glow: "rgba(249,115,22,0.25)",
+              tagStyle: { background: "rgba(249,115,22,0.12)", color: "#FB923C", border: "0.5px solid rgba(249,115,22,0.25)" },
+              desc: "From pastries to cakes — learn the art of baking with step-by-step guidance.",
             },
           ].map((c, i) => (
             <Link
@@ -623,33 +662,34 @@ export default function Home() {
               href="/main/login"
               ref={addRevealRef}
               data-reveal-id={`course-${i}`}
-              className={`course-card block rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 ${isRevealed(`course-${i}`) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+              className={`course-card block rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 ${isRevealed(`course-${i}`) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
               style={{
                 border: "0.5px solid rgba(255,255,255,0.06)",
                 background: "#12131F",
-                transitionDelay: `${i * 100}ms`,
+                transitionDelay: `${i * 80}ms`,
               }}
               onMouseMove={handleCardMouseMove}
             >
-              <div className="h-40 flex items-center justify-center text-5xl relative overflow-hidden" style={{ background: c.bg }}>
-                <div className="absolute inset-0 opacity-30" style={{ background: `radial-gradient(circle at 50% 50%, ${c.glow}, transparent 70%)` }} />
-                <span className="relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6">{c.emoji}</span>
+              <div className="h-44 sm:h-48 md:h-52 flex items-center justify-center text-5xl md:text-6xl relative overflow-hidden" style={{ background: c.bg }}>
+                <div className="absolute inset-0 opacity-40" style={{ background: `radial-gradient(circle at 50% 50%, ${c.glow}, transparent 70%)` }} />
+                <span className="relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6 drop-shadow-lg">{c.emoji}</span>
               </div>
-              <div className="p-6 relative z-10">
+              <div className="p-5 md:p-6 relative z-10">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full" style={c.tagStyle}>{c.tag}</span>
+                  <span className="text-[11px] md:text-xs font-semibold px-3 py-1 rounded-full" style={c.tagStyle}>{c.tag}</span>
                   <div className="flex items-center gap-1">
                     <svg className="w-3 h-3" style={{ color: "rgba(232,230,241,0.3)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                    <span className="text-xs" style={{ color: "rgba(232,230,241,0.3)" }}>{c.duration}</span>
+                    <span className="text-[11px] md:text-xs" style={{ color: "rgba(232,230,241,0.3)" }}>{c.duration}</span>
                   </div>
                 </div>
-                <h3 className="font-semibold text-base leading-snug mb-3" style={{ color: "#E8E6F1" }}>{c.title}</h3>
+                <h3 className="font-semibold text-base md:text-lg leading-snug mb-2" style={{ color: "#E8E6F1" }}>{c.title}</h3>
+                <p className="text-xs md:text-sm leading-relaxed mb-4 line-clamp-2" style={{ color: "rgba(232,230,241,0.35)" }}>{c.desc}</p>
                 <div className="flex justify-between items-center pt-3" style={{ borderTop: "0.5px solid rgba(255,255,255,0.05)" }}>
-                  <span className="text-xs flex items-center gap-1" style={{ color: "rgba(232,230,241,0.3)" }}>
+                  <span className="text-[11px] md:text-xs flex items-center gap-1" style={{ color: "rgba(232,230,241,0.3)" }}>
                     <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
                     {c.lessons} lessons
                   </span>
-                  <span className="text-xs flex items-center gap-1 font-medium" style={{ color: "rgba(232,230,241,0.45)" }}>
+                  <span className="text-[11px] md:text-xs flex items-center gap-1 font-medium" style={{ color: "rgba(232,230,241,0.45)" }}>
                     <svg className="w-3 h-3 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                     {c.rating}
                   </span>
@@ -761,7 +801,7 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
-      <footer id="contact" className="px-6 lg:px-10 py-8" style={{ borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
+      <footer className="px-6 lg:px-10 py-8" style={{ borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm" style={{ color: "rgba(232,230,241,0.25)" }}>© 2026 mayuri. all rights reserved.</p>
           <div className="flex gap-8">
@@ -826,6 +866,13 @@ export default function Home() {
           transform: translateY(-8px);
           border-color: rgba(99,102,241,0.2) !important;
           box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.1);
+        }
+
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
     </div>
