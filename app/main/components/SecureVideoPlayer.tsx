@@ -107,15 +107,13 @@ export default function SecureVideoPlayer({
 
   return (
     <div className="relative w-full aspect-video rounded-xl overflow-hidden" style={{ background: "#000" }}>
-      <iframe
-        ref={iframeRef}
-        src={resolvedUrl}
-        title={title}
-        className="absolute inset-0 w-full h-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-        loading="lazy"
-      />
+<video
+  controls
+  controlsList="nodownload"
+  className="absolute inset-0 w-full h-full"
+>
+  <source src={resolvedUrl} type="video/mp4" />
+</video>
     </div>
   );
 }

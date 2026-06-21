@@ -50,10 +50,7 @@ export async function POST(req: NextRequest) {
   if (!course?.youtube_url) return NextResponse.json({ error: "No video" }, { status: 404 });
 
   // extract ID and build embed URL right here, never send raw URL
-  const videoId = extractYouTubeId(course.youtube_url);
-  if (!videoId) return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
-
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&controls=1`;
+const embedUrl = course.youtube_url;
 
   // sign a JWT with the embed URL, expires in 2 hours
   const token = await new SignJWT({ embedUrl, courseId })
