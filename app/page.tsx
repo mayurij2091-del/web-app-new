@@ -368,51 +368,52 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="md:hidden" style={{ background: "rgba(10,11,20,0.98)", borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
-            <div className="px-6 py-4 space-y-3">
-<Link
-  href="#courses"
-  className="text-sm transition-colors relative pb-0.5 group"
-  style={{ color: "rgba(232,230,241,0.55)" }}
->
-  courses
-  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
-</Link>
-<a
-  href="https://wa.me/c/919082556465"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="text-sm transition-colors relative pb-0.5 group"
-  style={{ color: "rgba(232,230,241,0.55)" }}
->
-  contact
-  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
-</a>
-              {isLoggedIn ? (
-                <Link
-                  href="/main/dashboard"
-                  className="block text-sm font-medium px-5 py-2.5 rounded-xl text-center mt-4 flex items-center justify-center gap-2"
-                  style={{ background: "rgba(99,102,241,0.15)", color: "#818CF8", border: "0.5px solid rgba(99,102,241,0.25)" }}
-                >
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" style={{ background: "#6366F1", color: "#fff" }}>
-                    {userPhone.charAt(0).toUpperCase()}
-                  </div>
-                  {userPhone}
-                </Link>
-              ) : (
-                <Link
-                  href="/main/login"
-                  className="block text-sm font-medium px-5 py-2.5 rounded-xl text-center mt-4"
-                  style={{ background: "#6366F1", color: "#fff" }}
-                >
-                  log in
-                </Link>
-              )}
-            </div>
+       
+{/* Mobile menu */}
+{menuOpen && (
+  <div className="md:hidden" style={{ background: "rgba(10,11,20,0.98)", borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
+    <div className="px-6 py-4 space-y-3">
+      <a
+        href="https://wa.me/c/919082556465"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block text-sm py-2"
+        style={{ color: "rgba(232,230,241,0.7)" }}
+      >
+        courses
+      </a>
+      <a
+        href="https://wa.me/c/919082556465"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block text-sm py-2"
+        style={{ color: "rgba(232,230,241,0.7)" }}
+      >
+        contact
+      </a>
+      {isLoggedIn ? (
+        <Link
+          href="/main/dashboard"
+          className="block text-sm font-medium px-5 py-2.5 rounded-xl text-center mt-4 flex items-center justify-center gap-2"
+          style={{ background: "rgba(99,102,241,0.15)", color: "#818CF8", border: "0.5px solid rgba(99,102,241,0.25)" }}
+        >
+          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" style={{ background: "#6366F1", color: "#fff" }}>
+            {userPhone.charAt(0).toUpperCase()}
           </div>
-        )}
+          {userPhone}
+        </Link>
+      ) : (
+        <Link
+          href="/main/login"
+          className="block text-sm font-medium px-5 py-2.5 rounded-xl text-center mt-4"
+          style={{ background: "#6366F1", color: "#fff" }}
+        >
+          log in
+        </Link>
+      )}
+    </div>
+  </div>
+)}
       </nav>
 
       {/* HERO */}
