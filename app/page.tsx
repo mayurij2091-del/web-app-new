@@ -262,7 +262,7 @@ export default function Home() {
 
   const isRevealed = (id: string) => !!revealed[id];
 
-  const navLinks = ["courses", "about"];
+
 
   return (
     <div className="min-h-screen font-sans relative" style={{ background: "#0A0B14", color: "#E8E6F1" }}>
@@ -308,17 +308,24 @@ export default function Home() {
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((item) => (
-                <Link
-                  key={item}
-                  href={`#${item}`}
-                  className="text-sm transition-colors relative pb-0.5 group"
-                  style={{ color: "rgba(232,230,241,0.55)" }}
-                >
-                  {item}
-                  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
-                </Link>
-              ))}
+<Link
+  href="#courses"
+  className="text-sm transition-colors relative pb-0.5 group"
+  style={{ color: "rgba(232,230,241,0.55)" }}
+>
+  courses
+  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
+</Link>
+<a
+  href="https://wa.me/c/919082556465"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-sm transition-colors relative pb-0.5 group"
+  style={{ color: "rgba(232,230,241,0.55)" }}
+>
+  contact
+  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
+</a>
               {isLoggedIn ? (
                 <Link
                   href="/main/dashboard"
@@ -365,11 +372,24 @@ export default function Home() {
         {menuOpen && (
           <div className="md:hidden" style={{ background: "rgba(10,11,20,0.98)", borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
             <div className="px-6 py-4 space-y-3">
-              {navLinks.map((item) => (
-                <Link key={item} href={`#${item}`} className="block text-sm py-2" style={{ color: "rgba(232,230,241,0.7)" }}>
-                  {item}
-                </Link>
-              ))}
+<Link
+  href="#courses"
+  className="text-sm transition-colors relative pb-0.5 group"
+  style={{ color: "rgba(232,230,241,0.55)" }}
+>
+  courses
+  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
+</Link>
+<a
+  href="https://wa.me/c/919082556465"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-sm transition-colors relative pb-0.5 group"
+  style={{ color: "rgba(232,230,241,0.55)" }}
+>
+  contact
+  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
+</a>
               {isLoggedIn ? (
                 <Link
                   href="/main/dashboard"
@@ -633,9 +653,7 @@ export default function Home() {
               <Link
                 key={c.id}
                 href="/main/login"
-                ref={addRevealRef}
-                data-reveal-id={`course-${i}`}
-                className={`course-card block rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 ${isRevealed(`course-${i}`) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                className="course-card block rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 opacity-100 translate-y-0"
                 style={{
                   border: "0.5px solid rgba(255,255,255,0.06)",
                   background: "#12131F",
@@ -785,17 +803,32 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm" style={{ color: "rgba(232,230,241,0.25)" }}>© 2026 mayuri. all rights reserved.</p>
           <div className="flex gap-8">
-            {["privacy", "terms", "support"].map((l) => (
-              <Link
-                key={l}
-                href="#"
-                className="text-sm relative group transition-colors hover:!text-[#E8E6F1]"
-                style={{ color: "rgba(232,230,241,0.25)" }}
-              >
-                {l}
-                <span className="absolute bottom-[-2px] left-0 w-0 h-px bg-[#E8E6F1] transition-all duration-300 group-hover:w-full" />
-              </Link>
-            ))}
+<Link
+  href="#"
+  className="text-sm relative group transition-colors hover:!text-[#E8E6F1]"
+  style={{ color: "rgba(232,230,241,0.25)" }}
+>
+  privacy
+  <span className="absolute bottom-[-2px] left-0 w-0 h-px bg-[#E8E6F1] transition-all duration-300 group-hover:w-full" />
+</Link>
+<Link
+  href="#"
+  className="text-sm relative group transition-colors hover:!text-[#E8E6F1]"
+  style={{ color: "rgba(232,230,241,0.25)" }}
+>
+  terms
+  <span className="absolute bottom-[-2px] left-0 w-0 h-px bg-[#E8E6F1] transition-all duration-300 group-hover:w-full" />
+</Link>
+<a
+  href="https://wa.me/919082556465"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-sm relative group transition-colors hover:!text-[#E8E6F1]"
+  style={{ color: "rgba(232,230,241,0.25)" }}
+>
+  support
+  <span className="absolute bottom-[-2px] left-0 w-0 h-px bg-[#E8E6F1] transition-all duration-300 group-hover:w-full" />
+</a>
           </div>
         </div>
       </footer>
