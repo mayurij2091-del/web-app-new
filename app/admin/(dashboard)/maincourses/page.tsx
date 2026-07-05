@@ -182,9 +182,36 @@ export default function MainCoursesPage() {
     }
     if (existing) { setMcAssignMsg({ type: "error", text: "Already assigned to this user." }); setMcAssignLoading(false); return; }
     const { error } = await supabase.from("user_main_courses").insert([{ user_id: mcAssignUserId, main_course_id: mcAssignMainCourseId }]);
-    if (error) { setMcAssignMsg({ type: "error", text: error.message }); }
-    else { setMcAssignMsg({ type: "success", text: "Main course assigned." }); setMcAssignUserId(""); setMcAssignMainCourseId(""); }
-    setMcAssignLoading(false);
+    if (error) { setMcAssignMsg({ type: "error", text: error.message }); setMcAssignLoading(false); return; }
+
+    // NEW: auto-assign all linked subcourses too
+    const { data: linked, error: linkErr } = await supabase
+      .from("main_course_subcourses")
+      .select("course_id")
+      .eq("main_course_id", mcAssignMainCourseId);
+    if (linkErr) { setMcAssignMsg({ type: "error", text: linkErr.message }); setMcAssignLoading(false); return; }
+
+    if (linked && linked.length > 0) {
+      const courseIds = linked.map(l => l.course_id);
+      const { data: existingCourses, error: ecErr } = await supabase
+        .from("user_courses")
+        .select("course_id")
+        .eq("user_id", mcAssignUserId)
+        .in("course_id", courseIds);
+      if (ecErr) { setMcAssignMsg({ type: "error", text: ecErr.message }); setMcAssignLoading(false); return; }
+
+      const existingSet = new Set(existingCourses?.map(r => r.course_id) || []);
+      const toInsert = courseIds
+        .filter(cid => !existingSet.has(cid))
+        .map(cid => ({ user_id: mcAssignUserId, course_id: cid }));
+
+      if (toInsert.length > 0) {
+        const { error: insertErr } = await supabase.from("user_courses").insert(toInsert);
+        if (insertErr) { setMcAssignMsg({ type: "error", text: insertErr.message }); setMcAssignLoading(false); return; }
+      }
+    }
+
+    setMcAssignMsg({ type: "success", text: "Main course assigned." }); setMcAssignUserId(""); setMcAssignMainCourseId(""); setMcAssignLoading(false);
   };
 
   // Single link subcourse
