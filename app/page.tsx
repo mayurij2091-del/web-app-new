@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { supabase } from "./main/lib/shared";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -11,6 +12,17 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userPhone, setUserPhone] = useState("");
   const [videoPlaying, setVideoPlaying] = useState(false);
+
+  // NEW: main courses state
+  const [mainCourses, setMainCourses] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    image_url: string;
+    total_lessons: number;
+    created_at: string;
+  }>>([]);
+  const [loadingMainCourses, setLoadingMainCourses] = useState(true);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glowRef = useRef<HTMLDivElement | null>(null);
@@ -40,6 +52,30 @@ export default function Home() {
       setIsLoggedIn(true);
       setUserPhone(phone);
     }
+  }, []);
+
+  // NEW: fetch main courses
+  useEffect(() => {
+    const fetchMainCourses = async () => {
+      setLoadingMainCourses(true);
+      const { data, error } = await supabase
+        .from("main_courses")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error && data) {
+        // If more than 6, shuffle and pick 6
+        if (data.length > 6) {
+          const shuffled = [...data].sort(() => 0.5 - Math.random());
+          setMainCourses(shuffled.slice(0, 6));
+        } else {
+          setMainCourses(data);
+        }
+      } else {
+        setMainCourses([]);
+      }
+      setLoadingMainCourses(false);
+    };
+    fetchMainCourses();
   }, []);
 
   useEffect(() => {
@@ -582,122 +618,66 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-          {[
-            {
-              emoji: "🍳",
-              tag: "beginner",
-              title: "Cooking Masterclass",
-              lessons: 18,
-              rating: "4.9",
-              duration: "6h 20m",
-              bg: "rgba(245,158,11,0.08)",
-              glow: "rgba(245,158,11,0.25)",
-              tagStyle: { background: "rgba(245,158,11,0.12)", color: "#FBBF24", border: "0.5px solid rgba(245,158,11,0.25)" },
-              desc: "Learn essential cooking techniques, meal prep, and delicious recipes from scratch.",
-            },
-            {
-              emoji: "💄",
-              tag: "intermediate",
-              title: "DIY Makeup Products",
-              lessons: 14,
-              rating: "4.8",
-              duration: "5h 10m",
-              bg: "rgba(236,72,153,0.08)",
-              glow: "rgba(236,72,153,0.25)",
-              tagStyle: { background: "rgba(236,72,153,0.12)", color: "#F472B6", border: "0.5px solid rgba(236,72,153,0.25)" },
-              desc: "Create your own lip balms, foundations, and skincare products at home safely.",
-            },
-            {
-              emoji: "💇‍♀️",
-              tag: "all levels",
-              title: "Hair Growth Secrets",
-              lessons: 12,
-              rating: "5.0",
-              duration: "4h 45m",
-              bg: "rgba(139,92,246,0.08)",
-              glow: "rgba(139,92,246,0.25)",
-              tagStyle: { background: "rgba(139,92,246,0.12)", color: "#A78BFA", border: "0.5px solid rgba(139,92,246,0.25)" },
-              desc: "Science-backed routines, natural remedies, and expert tips for stronger, longer hair.",
-            },
-            {
-              emoji: "🧴",
-              tag: "beginner",
-              title: "Natural Skincare 101",
-              lessons: 10,
-              rating: "4.7",
-              duration: "3h 30m",
-              bg: "rgba(16,185,129,0.08)",
-              glow: "rgba(16,185,129,0.25)",
-              tagStyle: { background: "rgba(16,185,129,0.12)", color: "#34D399", border: "0.5px solid rgba(16,185,129,0.25)" },
-              desc: "Build a clean skincare routine with natural ingredients for glowing, healthy skin.",
-            },
-            {
-              emoji: "✨",
-              tag: "advanced",
-              title: "Professional Makeup Artistry",
-              lessons: 22,
-              rating: "4.9",
-              duration: "8h 15m",
-              bg: "rgba(99,102,241,0.08)",
-              glow: "rgba(99,102,241,0.25)",
-              tagStyle: { background: "rgba(99,102,241,0.12)", color: "#818CF8", border: "0.5px solid rgba(99,102,241,0.25)" },
-              desc: "Master advanced techniques for bridal, editorial, and special occasion makeup.",
-            },
-            {
-              emoji: "🍰",
-              tag: "intermediate",
-              title: "Baking & Desserts",
-              lessons: 16,
-              rating: "4.8",
-              duration: "5h 50m",
-              bg: "rgba(249,115,22,0.08)",
-              glow: "rgba(249,115,22,0.25)",
-              tagStyle: { background: "rgba(249,115,22,0.12)", color: "#FB923C", border: "0.5px solid rgba(249,115,22,0.25)" },
-              desc: "From pastries to cakes — learn the art of baking with step-by-step guidance.",
-            },
-          ].map((c, i) => (
-            <Link
-              key={c.title}
-              href="/main/login"
-              ref={addRevealRef}
-              data-reveal-id={`course-${i}`}
-              className={`course-card block rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 ${isRevealed(`course-${i}`) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-              style={{
-                border: "0.5px solid rgba(255,255,255,0.06)",
-                background: "#12131F",
-                transitionDelay: `${i * 80}ms`,
-              }}
-              onMouseMove={handleCardMouseMove}
-            >
-              <div className="h-44 sm:h-48 md:h-52 flex items-center justify-center text-5xl md:text-6xl relative overflow-hidden" style={{ background: c.bg }}>
-                <div className="absolute inset-0 opacity-40" style={{ background: `radial-gradient(circle at 50% 50%, ${c.glow}, transparent 70%)` }} />
-                <span className="relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6 drop-shadow-lg">{c.emoji}</span>
-              </div>
-              <div className="p-5 md:p-6 relative z-10">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] md:text-xs font-semibold px-3 py-1 rounded-full" style={c.tagStyle}>{c.tag}</span>
-                  <div className="flex items-center gap-1">
-                    <svg className="w-3 h-3" style={{ color: "rgba(232,230,241,0.3)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                    <span className="text-[11px] md:text-xs" style={{ color: "rgba(232,230,241,0.3)" }}>{c.duration}</span>
+        {loadingMainCourses ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: "rgba(99,102,241,0.3)", borderTopColor: "#6366F1" }} />
+            <span className="text-sm ml-3" style={{ color: "rgba(232,230,241,0.35)" }}>Loading courses...</span>
+          </div>
+        ) : mainCourses.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-sm" style={{ color: "rgba(232,230,241,0.35)" }}>No main courses yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+            {mainCourses.map((c, i) => (
+              <Link
+                key={c.id}
+                href="/main/login"
+                ref={addRevealRef}
+                data-reveal-id={`course-${i}`}
+                className={`course-card block rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 ${isRevealed(`course-${i}`) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                style={{
+                  border: "0.5px solid rgba(255,255,255,0.06)",
+                  background: "#12131F",
+                  transitionDelay: `${i * 80}ms`,
+                }}
+                onMouseMove={handleCardMouseMove}
+              >
+                <div className="h-44 sm:h-48 md:h-52 flex items-center justify-center relative overflow-hidden" style={{ background: "rgba(99,102,241,0.08)" }}>
+                  {c.image_url ? (
+                    <img src={c.image_url} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(99,102,241,0.08)" }}>
+                      <span className="text-4xl font-semibold" style={{ color: "#6366F1", fontFamily: "'Playfair Display', serif" }}>{c.name.charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 opacity-40" style={{ background: "radial-gradient(circle at 50% 50%, rgba(99,102,241,0.25), transparent 70%)" }} />
+                </div>
+                <div className="p-5 md:p-6 relative z-10">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[11px] md:text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "rgba(99,102,241,0.12)", color: "#818CF8", border: "0.5px solid rgba(99,102,241,0.25)" }}>main course</span>
+                    <div className="flex items-center gap-1">
+                      <svg className="w-3 h-3" style={{ color: "rgba(232,230,241,0.3)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                      <span className="text-[11px] md:text-xs" style={{ color: "rgba(232,230,241,0.3)" }}>{c.total_lessons || 0} lessons</span>
+                    </div>
+                  </div>
+                  <h3 className="font-semibold text-base md:text-lg leading-snug mb-2" style={{ color: "#E8E6F1" }}>{c.name}</h3>
+                  <p className="text-xs md:text-sm leading-relaxed mb-4 line-clamp-2" style={{ color: "rgba(232,230,241,0.35)" }}>{c.description || "No description available."}</p>
+                  <div className="flex justify-between items-center pt-3" style={{ borderTop: "0.5px solid rgba(255,255,255,0.05)" }}>
+                    <span className="text-[11px] md:text-xs flex items-center gap-1" style={{ color: "rgba(232,230,241,0.3)" }}>
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+                      {c.total_lessons || 0} lessons
+                    </span>
+                    <span className="text-[11px] md:text-xs flex items-center gap-1 font-medium" style={{ color: "rgba(232,230,241,0.45)" }}>
+                      <svg className="w-3 h-3 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                      4.9
+                    </span>
                   </div>
                 </div>
-                <h3 className="font-semibold text-base md:text-lg leading-snug mb-2" style={{ color: "#E8E6F1" }}>{c.title}</h3>
-                <p className="text-xs md:text-sm leading-relaxed mb-4 line-clamp-2" style={{ color: "rgba(232,230,241,0.35)" }}>{c.desc}</p>
-                <div className="flex justify-between items-center pt-3" style={{ borderTop: "0.5px solid rgba(255,255,255,0.05)" }}>
-                  <span className="text-[11px] md:text-xs flex items-center gap-1" style={{ color: "rgba(232,230,241,0.3)" }}>
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
-                    {c.lessons} lessons
-                  </span>
-                  <span className="text-[11px] md:text-xs flex items-center gap-1 font-medium" style={{ color: "rgba(232,230,241,0.45)" }}>
-                    <svg className="w-3 h-3 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                    {c.rating}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* TESTIMONIALS */}
