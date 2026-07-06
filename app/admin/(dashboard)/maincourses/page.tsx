@@ -33,6 +33,13 @@ export default function MainCoursesPage() {
   const [usersError, setUsersError] = useState<string | null>(null);
   const [coursesError, setCoursesError] = useState<string | null>(null);
   
+  // Track which main course dropdown is expanded
+  const [expandedMcId, setExpandedMcId] = useState<string | null>(null);
+  // Map of main_course_id -> linked subcourses
+  const [mcLinks, setMcLinks] = useState<Record<string, Course[]>>({});
+  const [loadingLinksId, setLoadingLinksId] = useState<string | null>(null);
+  const [unlinkMsg, setUnlinkMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const [mcForm, setMcForm] = useState({ name: "", description: "", total_lessons: "" });
   const [mcImageFile, setMcImageFile] = useState<File | null>(null);
   const [mcImagePreview, setMcImagePreview] = useState<string | null>(null);
@@ -116,6 +123,77 @@ export default function MainCoursesPage() {
     fetchCourses();
   }, [fetchUsers, fetchCourses]);
 
+  // Fetch linked subcourses for a specific main course
+  const fetchLinkedSubcourses = useCallback(async (mainCourseId: string) => {
+    setLoadingLinksId(mainCourseId);
+    try {
+      const { data: links, error: linksErr } = await supabase
+        .from("main_course_subcourses")
+        .select("course_id")
+        .eq("main_course_id", mainCourseId);
+      
+      if (linksErr) throw linksErr;
+
+      if (!links || links.length === 0) {
+        setMcLinks(prev => ({ ...prev, [mainCourseId]: [] }));
+        return;
+      }
+
+      const courseIds = links.map(l => l.course_id);
+      const { data: subcourses, error: subErr } = await supabase
+        .from("courses")
+        .select("*")
+        .in("id", courseIds);
+
+      if (subErr) throw subErr;
+
+      // Preserve order of links
+      const courseMap = new Map(subcourses?.map(c => [c.id, c]));
+      const ordered = courseIds.map(id => courseMap.get(id)).filter(Boolean) as Course[];
+      
+      setMcLinks(prev => ({ ...prev, [mainCourseId]: ordered }));
+    } catch (err: any) {
+      setUnlinkMsg({ type: "error", text: err?.message || "Failed to load linked subcourses." });
+    } finally {
+      setLoadingLinksId(null);
+    }
+  }, []);
+
+  // Toggle dropdown and fetch if needed
+  const toggleDropdown = (mcId: string) => {
+    if (expandedMcId === mcId) {
+      setExpandedMcId(null);
+    } else {
+      setExpandedMcId(mcId);
+      if (!mcLinks[mcId]) {
+        fetchLinkedSubcourses(mcId);
+      }
+    }
+  };
+
+  // Unlink a subcourse from a main course
+  const handleUnlinkSubcourse = async (mainCourseId: string, courseId: string, courseTitle: string) => {
+    if (!confirm(`Unlink "${courseTitle}" from this main course?`)) return;
+    try {
+      const { error } = await supabase
+        .from("main_course_subcourses")
+        .delete()
+        .eq("main_course_id", mainCourseId)
+        .eq("course_id", courseId);
+      
+      if (error) throw error;
+
+      // Update local state to remove it
+      setMcLinks(prev => ({
+        ...prev,
+        [mainCourseId]: prev[mainCourseId]?.filter(c => c.id !== courseId) || []
+      }));
+      setUnlinkMsg({ type: "success", text: "Unlinked successfully." });
+    } catch (err: any) {
+      setUnlinkMsg({ type: "error", text: err?.message || "Unlink failed." });
+    }
+  };
+
   const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -164,6 +242,13 @@ export default function MainCoursesPage() {
     try {
       const { error } = await supabase.from("main_courses").delete().eq("id", id);
       if (error) throw error;
+      // Clean up links state
+      setMcLinks(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      if (expandedMcId === id) setExpandedMcId(null);
       fetchMainCourses();
     } catch (err: any) {
       setMcCreateMsg({ type: "error", text: err?.message || "Delete failed." });
@@ -228,7 +313,15 @@ export default function MainCoursesPage() {
     if (existing) { setLinkMsg({ type: "error", text: "Subcourse already linked to this main course." }); setLinkLoading(false); return; }
     const { error } = await supabase.from("main_course_subcourses").insert([{ main_course_id: linkMainCourseId, course_id: linkSubcourseId }]);
     if (error) { setLinkMsg({ type: "error", text: error.message }); }
-    else { setLinkMsg({ type: "success", text: "Subcourse linked successfully." }); setLinkMainCourseId(""); setLinkSubcourseId(""); }
+    else { 
+      setLinkMsg({ type: "success", text: "Subcourse linked successfully." }); 
+      setLinkMainCourseId(""); 
+      setLinkSubcourseId(""); 
+      // Refresh links if dropdown is open for this main course
+      if (expandedMcId === linkMainCourseId) {
+        fetchLinkedSubcourses(linkMainCourseId);
+      }
+    }
     setLinkLoading(false);
   };
 
@@ -271,6 +364,10 @@ export default function MainCoursesPage() {
         text: `Linked ${toLink.length} subcourse${toLink.length !== 1 ? "s" : ""}${skipped > 0 ? `, ${skipped} already linked` : ""}.`
       });
       setSelectedSubcourseIds([]);
+      // Refresh links if dropdown is open for this main course
+      if (expandedMcId === bulkLinkMainCourseId) {
+        fetchLinkedSubcourses(bulkLinkMainCourseId);
+      }
     } catch (err: any) {
       setBulkLinkMsg({ type: "error", text: err?.message || "Bulk link failed." });
     } finally {
@@ -317,6 +414,10 @@ export default function MainCoursesPage() {
         text: `Linked ${toLink.length} subcourse${toLink.length !== 1 ? "s" : ""}${skipped > 0 ? `, ${skipped} already linked` : ""}.`
       });
       setEmojiSelectedIds([]);
+      // Refresh links if dropdown is open for this main course
+      if (expandedMcId === emojiSearchMainCourseId) {
+        fetchLinkedSubcourses(emojiSearchMainCourseId);
+      }
     } catch (err: any) {
       setEmojiLinkMsg({ type: "error", text: err?.message || "Bulk link failed." });
     } finally {
@@ -581,6 +682,7 @@ export default function MainCoursesPage() {
             <h2 className="text-sm font-semibold">All Main Courses</h2>
             <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: DS.accentSoft, color: DS.accent }}>{mainCourses.length} total</span>
           </div>
+          {unlinkMsg && <div className="max-w-xs"><Msg msg={unlinkMsg} /></div>}
         </div>
         {mainCoursesError ? (
           <div className="px-6 py-12 text-center">
@@ -592,35 +694,113 @@ export default function MainCoursesPage() {
             ? <div className="px-6 py-12 text-center"><p className="text-xs" style={{ color: DS.text.dim }}>No main courses yet.</p></div>
             : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {mainCourses.map((mc) => (
-                  <div key={mc.id} className="rounded-xl overflow-hidden group transition-all hover:translate-y-[-2px] hover:shadow-lg"
-                    style={{ background: DS.bg.base, border: `1px solid ${DS.border.default}` }}>
-                    <div className="relative h-40 overflow-hidden">
-                      {mc.image_url
-                        ? <img src={mc.image_url} alt={mc.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        : <div className="w-full h-full flex items-center justify-center" style={{ background: DS.accentSoft }}>
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={DS.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                {mainCourses.map((mc) => {
+                  const isExpanded = expandedMcId === mc.id;
+                  const linked = mcLinks[mc.id];
+                  const isLoadingLinks = loadingLinksId === mc.id;
+
+                  return (
+                    <div key={mc.id} className="rounded-xl overflow-hidden group transition-all hover:translate-y-[-2px] hover:shadow-lg"
+                      style={{ background: DS.bg.base, border: `1px solid ${DS.border.default}` }}>
+                      <div className="relative h-40 overflow-hidden">
+                        {mc.image_url
+                          ? <img src={mc.image_url} alt={mc.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          : <div className="w-full h-full flex items-center justify-center" style={{ background: DS.accentSoft }}>
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={DS.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                            </div>
+                        }
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-semibold">{mc.name}</p>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: DS.accentSoft, color: DS.accent }}>
+                            {mc.total_lessons || 0} lessons
+                          </span>
+                        </div>
+                        <p className="text-xs mt-1.5 leading-relaxed" style={{ color: DS.text.muted }}>{mc.description?.slice(0, 80)}{mc.description?.length > 80 ? "..." : ""}</p>
+                        
+                        {/* Dropdown toggle */}
+                        <button 
+                          onClick={() => toggleDropdown(mc.id)}
+                          className="w-full mt-3 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all hover:bg-[rgba(255,255,255,0.03)]"
+                          style={{ border: `1px solid ${DS.border.default}`, color: DS.text.muted }}
+                        >
+                          <span className="flex items-center gap-2">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                            </svg>
+                            Linked Subcourses
+                            {linked && linked.length > 0 && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: DS.accentSoft, color: DS.accent }}>
+                                {linked.length}
+                              </span>
+                            )}
+                          </span>
+                          <svg 
+                            width="14" height="14" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="transition-transform duration-200"
+                            style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                          >
+                            <polyline points="6 9 12 15 18 9"/>
+                          </svg>
+                        </button>
+
+                        {/* Dropdown content */}
+                        {isExpanded && (
+                          <div className="mt-2 rounded-lg overflow-hidden" style={{ background: DS.bg.card, border: `1px solid ${DS.border.default}` }}>
+                            {isLoadingLinks ? (
+                              <div className="px-4 py-3 flex items-center gap-2">
+                                <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: `${DS.accent}40`, borderTopColor: DS.accent }}></div>
+                                <span className="text-xs" style={{ color: DS.text.muted }}>Loading...</span>
+                              </div>
+                            ) : !linked || linked.length === 0 ? (
+                              <div className="px-4 py-3 text-xs text-center" style={{ color: DS.text.dim }}>
+                                None
+                              </div>
+                            ) : (
+                              <div className="flex flex-col">
+                                {linked.map((sub, idx) => (
+                                  <div 
+                                    key={sub.id} 
+                                    className="flex items-center justify-between px-4 py-2.5"
+                                    style={{ borderBottom: idx < linked.length - 1 ? `1px solid ${DS.border.default}` : "none" }}
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="text-sm shrink-0">{sub.emoji}</span>
+                                      <span className="text-xs truncate" style={{ color: DS.text.primary }}>{sub.title}</span>
+                                    </div>
+                                    <button
+                                      onClick={() => handleUnlinkSubcourse(mc.id, sub.id, sub.title)}
+                                      className="text-[10px] px-2 py-1 rounded-md transition-all hover:opacity-80 shrink-0 ml-2"
+                                      style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444", border: "0.5px solid rgba(239,68,68,0.2)" }}
+                                    >
+                                      Unlink
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                      }
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-semibold">{mc.name}</p>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: DS.accentSoft, color: DS.accent }}>
-                          {mc.total_lessons || 0} lessons
-                        </span>
-                      </div>
-                      <p className="text-xs mt-1.5 leading-relaxed" style={{ color: DS.text.muted }}>{mc.description?.slice(0, 80)}{mc.description?.length > 80 ? "..." : ""}</p>
-                      <div className="flex justify-between items-center mt-4 pt-3" style={{ borderTop: `1px solid ${DS.border.default}` }}>
-                        <p className="text-[11px]" style={{ color: DS.text.dim }}>{new Date(mc.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
-                        <button onClick={() => handleDeleteMainCourse(mc.id, mc.name)}
-                          className="text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
-                          style={{ background: DS.accentSoft, color: DS.accent, border: `0.5px solid ${DS.accent}30` }}>Delete</button>
+                        )}
+
+                        <div className="flex justify-between items-center mt-4 pt-3" style={{ borderTop: `1px solid ${DS.border.default}` }}>
+                          <p className="text-[11px]" style={{ color: DS.text.dim }}>{new Date(mc.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                          <button onClick={() => handleDeleteMainCourse(mc.id, mc.name)}
+                            className="text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+                            style={{ background: DS.accentSoft, color: DS.accent, border: `0.5px solid ${DS.accent}30` }}>Delete</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
       </div>
