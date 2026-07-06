@@ -49,6 +49,21 @@ function stringToHsl(str: string, s: number, l: number): string {
   return `hsl(${hue}, ${s}%, ${l}%)`;
 }
 
+// Eye icon components
+const EyeOpenIcon = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const EyeClosedIcon = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -56,15 +71,17 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(true); // Admin panel: visible by default
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [createUserMsg, setCreateUserMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [resetPhone, setResetPhone] = useState<string | null>(null);
   const [resetPassword, setResetPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(true); // Admin panel: visible by default
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-const [userMainCourses, setUserMainCourses] = useState<Record<string, UserMainCourse[]>>({});
-const [userSubcourses, setUserSubcourses] = useState<Record<string, UserSubcourse[]>>({});
+  const [userMainCourses, setUserMainCourses] = useState<Record<string, UserMainCourse[]>>({});
+  const [userSubcourses, setUserSubcourses] = useState<Record<string, UserSubcourse[]>>({});
   const [loadingUserDetail, setLoadingUserDetail] = useState<string | null>(null);
 
   // 9. Error handling on fetch
@@ -92,10 +109,9 @@ const [userSubcourses, setUserSubcourses] = useState<Record<string, UserSubcours
       ]);
       if (mcErr) throw mcErr;
       if (scErr) throw scErr;
-setUserMainCourses((prev) => ({ ...prev, [userId]: (mc as unknown as UserMainCourse[]) ?? [] }));
-setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcourse[]) ?? [] }));
+      setUserMainCourses((prev) => ({ ...prev, [userId]: (mc as unknown as UserMainCourse[]) ?? [] }));
+      setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcourse[]) ?? [] }));
     } catch (err: any) {
-      // Silently handle — could add a detail-level error state if needed
       console.error("Failed to load user detail:", err);
     } finally {
       setLoadingUserDetail(null);
@@ -132,13 +148,11 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
   }, [fetchUserDetail]);
 
   // 3. Rely on DB unique constraint instead of pre-check (avoids race condition)
-  // 2. Hash password before storing — NOTE: implement hashPassword() in lib/auth.ts
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateUserLoading(true);
     setCreateUserMsg(null);
     try {
-      
       const { error } = await supabase.from("users").insert([{ phone: newPhone, password: newPassword }]);
       if (error) {
         if (error.code === "23505") {
@@ -150,6 +164,7 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
         setCreateUserMsg({ type: "success", text: `User ${newPhone} created.` });
         setNewPhone("");
         setNewPassword("");
+        setShowNewPassword(true);
         fetchUsers();
       }
     } catch (err: any) {
@@ -174,17 +189,16 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
     }
   };
 
-  // 2. Hash password on reset too
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetLoading(true);
     setResetMsg(null);
     try {
-      
       const { error } = await supabase.from("users").update({ password: resetPassword }).eq("phone", resetPhone!);
       if (error) throw error;
       setResetMsg({ type: "success", text: "Password updated." });
       setResetPassword("");
+      setShowResetPassword(true);
       setResetPhone(null);
     } catch (err: any) {
       setResetMsg({ type: "error", text: err?.message || "Reset failed." });
@@ -227,11 +241,34 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
           </div>
           <h2 className="text-sm font-semibold">Create New User</h2>
         </div>
-        <form onSubmit={handleCreateUser} className="flex gap-3 flex-wrap">
+        <form onSubmit={handleCreateUser} className="flex gap-3 flex-wrap items-center">
           <input type="tel" placeholder="Phone number" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} required
             className="flex-1 min-w-[180px] rounded-lg px-4 py-2.5 text-sm outline-none transition-all" style={inputStyle} onFocus={focusAccent} onBlur={blurReset} />
-          <input type="password" placeholder="Set password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required
-            className="flex-1 min-w-[180px] rounded-lg px-4 py-2.5 text-sm outline-none transition-all" style={inputStyle} onFocus={focusAccent} onBlur={blurReset} />
+
+          {/* Password input with eye toggle */}
+          <div className="flex-1 min-w-[180px] relative">
+            <input 
+              type={showNewPassword ? "text" : "password"} 
+              placeholder="Set password" 
+              value={newPassword} 
+              onChange={(e) => setNewPassword(e.target.value)} 
+              required
+              className="w-full rounded-lg px-4 py-2.5 pr-10 text-sm outline-none transition-all" 
+              style={inputStyle} 
+              onFocus={focusAccent} 
+              onBlur={blurReset} 
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+              style={{ color: DS.text.muted }}
+              tabIndex={-1}
+            >
+              {showNewPassword ? <EyeOpenIcon size={16} /> : <EyeClosedIcon size={16} />}
+            </button>
+          </div>
+
           <button type="submit" disabled={createUserLoading} className="px-6 py-2.5 rounded-lg text-sm font-medium transition-all hover:brightness-110 active:scale-[0.98]"
             style={{ background: DS.accent, color: "#fff", opacity: createUserLoading ? 0.6 : 1 }}>
             {createUserLoading ? "Creating..." : "Create User"}
@@ -266,7 +303,6 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
                   <div key={user.id} className="transition-colors hover:bg-[rgba(255,255,255,0.02)]"
                     style={{ borderBottom: `1px solid ${DS.border.default}` }}>
                     <div className="flex items-center px-6 py-4 gap-4">
-                      {/* 7. Stable avatar color from phone hash */}
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium shrink-0"
                         style={{ background: stringToHsl(user.phone, 60, 20), color: stringToHsl(user.phone, 70, 75) }}>
                         {user.phone.slice(0, 2)}
@@ -289,7 +325,7 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
                           </svg>
                           {expandedUserId === user.id ? "Hide" : "View"} courses
                         </button>
-                        <button onClick={() => { setResetPhone(user.phone); setResetMsg(null); setResetPassword(""); }}
+                        <button onClick={() => { setResetPhone(user.phone); setResetMsg(null); setResetPassword(""); setShowResetPassword(true); }}
                           className="text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
                           style={{ background: "rgba(255,255,255,0.04)", color: DS.text.secondary, border: "0.5px solid rgba(255,255,255,0.08)" }}>Reset pw</button>
                         <button onClick={() => handleDeleteUser(user.id, user.phone)}
@@ -401,9 +437,30 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
             </div>
             <p className="text-xs mb-5 ml-7" style={{ color: DS.text.muted }}>For {resetPhone}</p>
             <form onSubmit={handleResetPassword} className="flex flex-col gap-3">
-              {/* 10. type="password" so the new password isn't visible */}
-              <input type="password" placeholder="New password" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} required
-                className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all" style={inputStyle} onFocus={focusAccent} onBlur={blurReset} />
+              {/* Password input with eye toggle in modal */}
+              <div className="relative">
+                <input 
+                  type={showResetPassword ? "text" : "password"} 
+                  placeholder="New password" 
+                  value={resetPassword} 
+                  onChange={(e) => setResetPassword(e.target.value)} 
+                  required
+                  className="w-full rounded-lg px-4 py-2.5 pr-10 text-sm outline-none transition-all" 
+                  style={inputStyle} 
+                  onFocus={focusAccent} 
+                  onBlur={blurReset} 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowResetPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+                  style={{ color: DS.text.muted }}
+                  tabIndex={-1}
+                >
+                  {showResetPassword ? <EyeOpenIcon size={16} /> : <EyeClosedIcon size={16} />}
+                </button>
+              </div>
+
               {resetMsg && <Msg msg={resetMsg} />}
               <div className="flex gap-2 mt-1">
                 <button type="button" onClick={() => setResetPhone(null)} className="flex-1 py-2.5 rounded-lg text-sm transition-all hover:opacity-80"
@@ -420,4 +477,3 @@ setUserSubcourses((prev) => ({ ...prev, [userId]: (sc as unknown as UserSubcours
     </div>
   );
 }
-
