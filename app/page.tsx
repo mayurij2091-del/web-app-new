@@ -701,68 +701,46 @@ export default function Home() {
         )}
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
-        <div
-          ref={addRevealRef}
-          data-reveal-id="testimonials-header"
-          className={`text-center mb-12 transition-all duration-700 ${isRevealed("testimonials-header") ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-        >
-          <h2 className="text-3xl md:text-4xl font-medium mb-3" style={{ color: "#E8E6F1", fontFamily: "'Playfair Display', serif" }}>What students say</h2>
-          <p className="text-sm" style={{ color: "rgba(232,230,241,0.35)" }}>Real feedback from real learners</p>
-        </div>
+{/* TESTIMONIALS */}
+<section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+  <div
+    ref={addRevealRef}
+    data-reveal-id="testimonials-header"
+    className={`text-center mb-12 transition-all duration-700 ${isRevealed("testimonials-header") ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+  >
+    <h2 className="text-3xl md:text-4xl font-medium mb-3" style={{ color: "#E8E6F1", fontFamily: "'Playfair Display', serif" }}>What students say</h2>
+    <p className="text-sm" style={{ color: "rgba(232,230,241,0.35)" }}>Real feedback from real learners</p>
+  </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              text: "Mayuri's teaching style is incredible. The way she breaks down complex topics into digestible lessons changed how I approach learning entirely.",
-              initials: "JD",
-              name: "James Davidson",
-              role: "Product Designer",
-              color: "rgba(99,102,241,0.15)",
-              textColor: "#818CF8",
-            },
-            {
-              text: "I've tried many online courses before, but nothing compares to the depth and care put into each lesson here. Truly transformative.",
-              initials: "SK",
-              name: "Sarah Kim",
-              role: "Software Engineer",
-              color: "rgba(16,185,129,0.15)",
-              textColor: "#34D399",
-            },
-            {
-              text: "The community and the quality of content is unmatched. Every course feels like a personal mentorship session. Worth every penny.",
-              initials: "MR",
-              name: "Marcus Rivera",
-              role: "Entrepreneur",
-              color: "rgba(139,92,246,0.15)",
-              textColor: "#A78BFA",
-            },
-          ].map((t, i) => (
-            <div
-              key={t.name}
-              ref={addRevealRef}
-              data-reveal-id={`testimonial-${i}`}
-              className={`rounded-2xl p-6 transition-all duration-700 ${isRevealed(`testimonial-${i}`) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-              style={{ background: "#12131F", border: "0.5px solid rgba(255,255,255,0.05)", transitionDelay: `${i * 100}ms` }}
-            >
-              <div className="flex gap-1 mb-4">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <svg key={s} className="w-4 h-4 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                ))}
-              </div>
-              <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(232,230,241,0.65)" }}>&ldquo;{t.text}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium" style={{ background: t.color, color: t.textColor }}>{t.initials}</div>
-                <div>
-                  <p className="text-sm font-medium" style={{ color: "#E8E6F1" }}>{t.name}</p>
-                  <p className="text-xs" style={{ color: "rgba(232,230,241,0.25)" }}>{t.role}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {[
+      "/testimonials/review1.jpeg",
+      "/testimonials/review2.jpeg",
+      "/testimonials/review3.jpeg",
+    ].map((src, i) => (
+      <div
+        key={src}
+        ref={addRevealRef}
+        data-reveal-id={`testimonial-${i}`}
+        className={`rounded-2xl overflow-hidden transition-all duration-700 ${isRevealed(`testimonial-${i}`) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+        style={{ background: "#12131F", border: "0.5px solid rgba(255,255,255,0.05)", transitionDelay: `${i * 100}ms` }}
+      >
+        <img
+          src={src}
+          alt={`Student feedback screenshot ${i + 1}`}
+          className="w-full h-auto object-cover"
+        />
+      </div>
+    ))}
+  </div>
+
+  {/* "100+ more" note */}
+  <div className="text-center mt-10">
+    <p className="text-sm" style={{ color: "rgba(232,230,241,0.35)" }}>
+      + 100 more students saying the same thing 💬
+    </p>
+  </div>
+</section>
 
       {/* CTA */}
       <section id="about" className="max-w-7xl mx-auto px-6 lg:px-10 pb-24">
