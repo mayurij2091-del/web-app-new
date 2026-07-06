@@ -309,7 +309,9 @@ export default function Home() {
 
             <div className="hidden md:flex items-center gap-8">
 <Link
-  href="#courses"
+  href="https://wa.me/c/919082556465"
+  target="_blank"
+  rel="noopener noreferrer"
   className="text-sm transition-colors relative pb-0.5 group"
   style={{ color: "rgba(232,230,241,0.55)" }}
 >
@@ -317,7 +319,7 @@ export default function Home() {
   <span className="absolute bottom-0 left-0 w-0 h-px bg-[#6366F1] transition-all duration-300 ease-out group-hover:w-full" />
 </Link>
 <a
-  href="https://wa.me/c/919082556465"
+  href="https://wa.me/919082556465"
   target="_blank"
   rel="noopener noreferrer"
   className="text-sm transition-colors relative pb-0.5 group"
@@ -383,7 +385,7 @@ export default function Home() {
         courses
       </a>
       <a
-        href="https://wa.me/c/919082556465"
+        href="https://wa.me/919082556465"
         target="_blank"
         rel="noopener noreferrer"
         className="block text-sm py-2"
